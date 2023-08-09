@@ -1,0 +1,6 @@
+library(here)
+library(phytools)
+tree <- read.tree("R/data/processed/arvore.2nomes.07.08.2023")
+png(filename = "R/output/figuras/filogenia_2nomes.png", width = 1500, height = 1500)
+plot.phylo(tree,  node.width = 4, edge.width = 4, label.offset = 0.3, cex = 1.7)
+dev.off()
