@@ -2,13 +2,10 @@
 
 library(here)
 
-tab <- read.csv("R/data/raw/M.Luisa_07.08.2023.csv")
+tab <- read.csv("R/data/raw/MLuisaSuitable_20.08.2023.csv")
 str(tab)
 table(tab$suitable_for_master_project)
 
-##sobrescrevendo a tabela para trabalhar somente com os artigos que passaram na triagem
-
-tab <- tab[tab$suitable_for_master_project == "yes" , ]
 
 ##corrigir erros de digitacao, ou entradas que vao dar erro no pacote
 tab[tab$n_sp_paper   ==  "Elymus farctus (dominant in the patch)", "n_sp_paper" ]<- "Elymus farctus"
@@ -79,13 +76,13 @@ tree2nomes <- phylo.maker(inputvphylo2, tree = GBOTB.extended.LCVP,
                           nodes = nodes.info.1.LCVP,  scenarios = "S3")
 
 ##salvando as arvores
-#write.tree(treecompleta$scenario.3, "R/output/arvore.07.08.2023")
-#write.tree(tree2nomes$scenario.3, "R/output/arvore.2nomes.07.08.2023")
+write.tree(treecompleta$scenario.3, "R/output/arvore.22.08.2023")
+write.tree(tree2nomes$scenario.3, "R/output/arvore.2nomes.22.08.2023")
 
 ##check tree
 library(ape)
 
-filogenia <- read.tree("R/data/processed/arvore.2nomes.07.08.2023")
+filogenia <- read.tree("R/output/arvore.2nomes.22.08.2023")
 plot(filogenia, cex = 0.5, show.tip.label = T)
 plot.phylo(filogenia, show.tip.label = T, show.node.label = F, cex = 0.7)
 

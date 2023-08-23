@@ -13,7 +13,7 @@ library(metafor)
 library(orchaRd)
 library(here)
 
-metadata <- read.csv("R/data/processed/tab.dist.filo.07.08.2023.csv")
+metadata <- read.csv("R/data/processed/tab.dist.filo.22.08.2023.csv")
 
 str(metadata)
 
@@ -452,7 +452,7 @@ lines(seq(0,650, length = 100),
 
 ```{r}
 model.filo.for1.nogimno <-rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), 
-       mods = ~phylo_dist*lifeform1_similarity,       data = data)
+       mods = ~ 0 + phylo_dist*lifeform1_similarity,       data = data)
 model.filo.for1.nogimno
 
 ```
@@ -558,7 +558,7 @@ lines(seq(0,650, length = 100),
 
 ```{r}
 model.filo.for2.nogimno <-rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), 
-       mods = ~phylo_dist*lifeform2_similarity,       data = data)
+       mods = ~ 0 + phylo_dist*lifeform2_similarity,       data = data)
 model.filo.for2.nogimno
 
 ```
@@ -662,7 +662,7 @@ lines(seq(0,650, length = 100),
 ```
 4- Modelo distância filogenética * combinação estágio ontogenético
 ```{r}
-model.filo.ontogenia.nogimno <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome),mods = ~phylo_dist*lifestage_n_t,
+model.filo.ontogenia.nogimno <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome),mods = ~ 0+ phylo_dist*lifestage_n_t,
  data = data[c(which(data$lifestage_n_t == "notseedling_notseedling"| 
                       data$lifestage_n_t == "notseedling_seedling")),  ])
 model.filo.ontogenia.nogimno
@@ -769,7 +769,7 @@ lines(seq(0,650, length = 100),
 ```
 5-a) Modelo distância filogenética * gradiente da duna
 ```{r}
-model_filo.duna <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), mods = ~phylo_dist*gradient2,       data = data[data$gradient2 == "1"| data$gradient2 == "2",])
+model_filo.duna <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), mods = ~0 +phylo_dist*gradient2,       data = data[data$gradient2 == "1"| data$gradient2 == "2",])
 model_filo.duna
 
 ```
@@ -874,6 +874,8 @@ lines(seq(0,650, length = 100),
 model_filo.gai <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), mods = ~phylo_dist*gai,       data = data)
 model_filo.gai
 
+model_filo.gai2 <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), mods = ~ phylo_dist*gai + phylo_dist*I(gai^2),       data = data)
+model_filo.gai2
 ```
 Heterogenidade:
 
@@ -908,6 +910,15 @@ Vies de publicacao:
 egger.filo.gai <- lm(residuals.rma(model_filo.gai)~ data$es_variance)
 summary(egger.filo.gai)
 ```
+Graph:
+```{r}
+library(plotly)
+grafico <- plot_ly(x= c(0:300), y=c(-5:5), z= )
+
+
+```
+
+
 
 FUNIL PLOTS:
 ```{r}

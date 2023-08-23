@@ -1,12 +1,9 @@
 ##Inserindo as distancias na tabela
 
-tab <- read.csv("R/data/raw/M.Luisa_07.08.2023.csv")
+tab <- read.csv("R/data/raw/MLuisaSuitable_20.08.2023.csv")
 str(tab)
 table(tab$suitable_for_master_project)
 
-##sobrescrevendo a tabela para trabalhar somente com os artigos que passaram na triagem
-
-tab <- tab[tab$suitable_for_master_project == "yes" , ]
 
 ##corrigir erros de digitacao, ou entradas que vao dar erro no pacote
 
@@ -103,5 +100,5 @@ hist((tab$phylo_dist), breaks = 50, xlab = "Phylogenetic distance", main ="")
 max(tab$phylo_dist)
 table(tab$phylo_dist)
 
-write.csv( tab,file = "R/data/processed/tab.dist.filo.07.08.2023.csv")
+write.csv( tab,file = "R/data/processed/tab.dist.filo.22.08.2023.csv")
 
