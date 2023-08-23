@@ -511,7 +511,7 @@ regplot( model.filo.for1.nogimno,
         cex.axis = 1.25,
         bty = "l")
 
-A <- predict(model.filo.for1.nogimno,newmods = cbind(seq(0,650, length = 100), 1, seq(0,650, length = 100)))
+A <- predict(model.filo.for1.nogimno,newmods = cbind(seq(0,300, length = 100), 0, 1, seq(0,300, length = 100)))
 
 polygon(x = c(seq(0,650, length = 100), rev(seq(0,650, length = 100))),
         y = c(A$ci.lb, rev(A$ci.ub)),
@@ -532,7 +532,7 @@ lines(seq(0,650, length = 100),
       lty = 3,
       col = rgb(113, 172, 224, max = 255, alpha = 200))
 
-B <- predict(model.filo.for1.nogimno, newmods = cbind(seq(0,650, length = 100), 0, 0))
+B <- predict(model.filo.for1.nogimno, newmods = cbind(seq(0,300, length = 100),1, 0,0 ))
 
 polygon(x = c(seq(0,650, length = 100), rev(seq(0,650, length = 100))),
         y = c(B$ci.lb, rev(B$ci.ub)),
@@ -618,7 +618,7 @@ regplot( model.filo.for2.nogimno,
          cex.axis = 1.25,
         bty = "l")
 
-A2 <- predict(model.filo.for2.nogimno, newmods = cbind(seq(0,650, length = 100), 1, seq(0,650, length = 100)))
+A2 <- predict(model.filo.for2.nogimno, newmods = cbind(seq(0,300, length = 100),0, 1, seq(0,300, length = 100)))
 
 polygon(x = c(seq(0,650, length = 100), rev(seq(0,650, length = 100))),
         y = c(A2$ci.lb, rev(A2$ci.ub)),
@@ -639,7 +639,7 @@ lines(seq(0,650, length = 100),
       lty = 3,
       col = rgb(113, 172, 224, max = 255, alpha = 200))
 
-B2 <- predict(model.filo.for2.nogimno, newmods = cbind(seq(0,650, length = 100), 0, 0))
+B2 <- predict(model.filo.for2.nogimno, newmods = cbind(seq(0,300, length = 100),1, 0, 0))
 
 polygon(x = c(seq(0,650, length = 100), rev(seq(0,650, length = 100))),
         y = c(B2$ci.lb, rev(B2$ci.ub)),
@@ -725,7 +725,7 @@ regplot( model.filo.ontogenia.nogimno,
          cex.axis = 1.25,
         bty = "l")
 
-N <- predict(model.filo.ontogenia.nogimno, newmods = cbind(seq(0,650, length = 100), 0, 0))
+N <- predict(model.filo.ontogenia.nogimno, newmods = cbind(seq(0,300, length = 100), 1, 0, 0))
 
 polygon(x = c(seq(0,650, length = 100), rev(seq(0,650, length = 100))),
         y = c(N$ci.lb, rev(N$ci.ub)),
@@ -746,7 +746,7 @@ lines(seq(0,650, length = 100),
       lty = 3,
       col = rgb(113, 172, 224, max = 255, alpha = 200))
 
-S <- predict(model.filo.ontogenia.nogimno, newmods = cbind(seq(0,650, length = 100), 1, seq(0,650, length = 100)))
+S <- predict(model.filo.ontogenia.nogimno, newmods = cbind(seq(0,300, length = 100),0, 1, seq(0,300, length = 100)))
 
 polygon(x = c(seq(0,650, length = 100), rev(seq(0,650, length = 100))),
         y = c(S$ci.lb, rev(S$ci.ub)),
@@ -827,7 +827,7 @@ regplot( model_filo.duna,
          cex.axis = 1.25,
         bty = "l")
 
-f <- predict(model_filo.duna, newmods = cbind(seq(0,650, length = 100), 0, 0))
+f <- predict(model_filo.duna, newmods = cbind(seq(0,650, length = 100),1, 0, 0))
 
 polygon(x = c(seq(0,650, length = 100), rev(seq(0,650, length = 100))),
         y = c(f$ci.lb, rev(f$ci.ub)),
@@ -848,7 +848,7 @@ lines(seq(0,650, length = 100),
       lty = 3,
       col = rgb(113, 172, 224, max = 255, alpha = 200))
 
-m <- predict(model_filo.duna, newmods = cbind(seq(0,650, length = 100), 1, seq(0,650, length = 100)))
+m <- predict(model_filo.duna, newmods = cbind(seq(0,650, length = 100),0, 1, seq(0,650, length = 100)))
 
 polygon(x = c(seq(0,650, length = 100), rev(seq(0,650, length = 100))),
         y = c(m$ci.lb, rev(m$ci.ub)),
@@ -912,8 +912,6 @@ summary(egger.filo.gai)
 ```
 Graph:
 ```{r}
-library(plotly)
-grafico <- plot_ly(x= c(0:300), y=c(-5:5), z= )
 
 
 ```
