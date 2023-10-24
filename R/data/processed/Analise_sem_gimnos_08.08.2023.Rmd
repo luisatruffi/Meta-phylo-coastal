@@ -38,6 +38,12 @@ data$outcome <- as.factor(data$outcome)
 data$dd_lat <- as.numeric(data$dd_lat)
 str(data)
 
+#padronizando dados para analise de combinacao de forma de vida
+data[data$n_lifeform3 == "herb" & data$t_lifeform3 == "herb"  ,"lifeform_n_t"] <- "h.h"
+data[data$n_lifeform3 == "herb" & data$t_lifeform3 == "woody"  ,"lifeform_n_t"] <- "h.w"
+data[data$n_lifeform3 == "woody" & data$t_lifeform3 == "herb"  ,"lifeform_n_t"] <- "w.h"
+data[data$n_lifeform3 == "woody" & data$t_lifeform3 == "woody"  ,"lifeform_n_t"] <- "w.w"
+
 
 #padronizando os dados para analise da ontogenia
 table(data$lifestage_n_t)
