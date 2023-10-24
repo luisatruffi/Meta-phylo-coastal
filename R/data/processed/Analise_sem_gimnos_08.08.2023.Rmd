@@ -20,7 +20,7 @@ str(metadata)
 ##selecionando somente as colunas relevantes para analise
 table(metadata$suitable_for_master_project)
 
-data <- metadata[metadata$suitable_for_master_project=="yes", c("study2022",              "outcome", "reference", "pub_year", "location1", "location2","dd_lat", "dd_long", "gradient2", "gai", "n_sp_LCVP", "n_family_LCVP","n_lifeform2", "n_lifeform3", "n_lifestage", "t_sp_LCVP", "t_family_LCVP", "t_lifeform2", "t_lifeform3", "t_lifestage3", "lifeform1_similarity", "lifeform2_similarity", "lifestage_n_t", "performance2", "interaction_type","suitable_for_master_project","suitable_master_reason", "MEANc", "MEANn", "SDc", "SDn", "Nc", "Nn","SE_c", "SE_n", "sucess_c", "sucess_n", "fail_c", "fail_n", "data_type", "phylo_dist")]
+data <- metadata[metadata$suitable_for_master_project=="yes", c("study2022",              "outcome", "reference", "pub_year", "location1", "location2", "coordinate1","coordinate2" ,"dd_lat", "dd_long","gradient1", "gradient2", "gai", "n_sp_paper", "n_sp_LCVP", "n_family_LCVP","n_lifeform1","n_lifeform2", "n_lifeform3", "n_lifestage","t_sp_paper", "t_sp_LCVP", "t_family_LCVP", "t_lifeform1","t_lifeform2", "t_lifeform3", "t_lifestage3", "t_lifestage1","lifeform1_similarity", "lifeform2_similarity", "lifestage_n_t", "performance1","performance2", "interaction_type", "study_type","MEANc", "MEANn", "SDc", "SDn", "Nc", "Nn","SE_c", "SE_n", "sucess_c", "sucess_n", "fail_c", "fail_n", "data_type", "phylo_dist")]
 
 data$dd_lat <- sub(",", ".", data$dd_lat)
 data$dd_long <- sub(",", ".", data$dd_long)
@@ -58,6 +58,12 @@ table(data$zoneclima)
 ##adicionando colunas para tamanho de efeito
 data$effectsize <- rep(NA, nrow(data))
 data$es_variance <- rep(NA, nrow(data))
+
+data$lifeform_n_t <- NA
+data[data$n_lifeform3 == "woody" & data$t_lifeform3 == "woody","lifeform_n_t" ] <- "w.w"
+data[data$n_lifeform3 == "woody" & data$t_lifeform3 == "herb","lifeform_n_t" ] <- "w.h"
+data[data$n_lifeform3 == "herb" & data$t_lifeform3 == "woody","lifeform_n_t" ] <- "h.w"
+data[data$n_lifeform3 == "herb" & data$t_lifeform3 == "herb","lifeform_n_t" ] <- "h.h"
 
 ```
 
@@ -302,6 +308,12 @@ I2study.filo.abun <- model.filo.abun$sigma2[1] / (model.filo.abun$sigma2[1] + mo
 I2effect.filo.abun <- model.filo.abun$sigma2[2]/(model.filo.abun$sigma2[1] + model.filo.abun$sigma2[2] + v.ab)
 ```
 
+```{r}
+egger.model.filo.abun<- lm(residuals.rma(model.filo.abun)~data[data$performance2 == "abundance", "es_variance"])
+summary(egger.model.filo.abun)
+```
+
+
 Crescimento:
 
 ```{r}
@@ -322,6 +334,11 @@ I2total.filo.grow <- (model.filo.grow$sigma2[1] + model.filo.grow$sigma2[2]) / (
 I2study.filo.grow <- model.filo.grow$sigma2[1] / (model.filo.grow$sigma2[1] + model.filo.grow$sigma2[2] + v.gr)
 
 I2effect.filo.grow <- model.filo.grow$sigma2/(model.filo.grow$sigma2[1] + model.filo.grow$sigma2[2] + v.gr)
+```
+
+```{r}
+egger.model.filo.grow<- lm(residuals.rma(model.filo.grow)~data[data$performance2 == "growth"|data$performance2 == "growth_size", "es_variance"])
+summary(egger.model.filo.grow)
 ```
 
 Reproducao:
@@ -346,6 +363,10 @@ I2study.filo.rep <- model.filo.rep$sigma2[1] / (model.filo.rep$sigma2[1] + model
 
 I2effect.filo.rep <- model.filo.rep$sigma2[2]/(model.filo.rep$sigma2[1] + model.filo.rep$sigma2[2] + v.rep)
 ```
+```{r}
+egger.model.filo.rep<- lm(residuals.rma(model.filo.rep)~data[data$performance2 == "reproduction","es_variance"])
+summary(egger.model.filo.rep)
+```
 
 Sobrevivencia
 
@@ -368,7 +389,10 @@ I2study.filo.sur <- model.filo.sur$sigma2[1] / (model.filo.sur$sigma2[1]+ model.
 
 I2effect.filo.sur <- model.filo.sur$sigma2[2]/(model.filo.sur$sigma2[1] + model.filo.sur$sigma2[2] + v.sur)
 ```
-
+```{r}
+egger.model.filo.sur<- lm(residuals.rma(model.filo.sur)~data[data$performance2 == "survival","es_variance"])
+summary(egger.model.filo.sur)
+```
 Graficos modelos de cada variavel perfomance separadas:
 
 ```{r}
@@ -1010,7 +1034,7 @@ cols <- cols[as.numeric(factor(data$study2022))]
 funnel(data$effectsize , data$es_variance , 
        yaxis = "sei",  
        ylab = "Standard Error", 
-       xlab = "Effect size (SMD)", 
+       xlab = "Effect size", 
        col = cols)
 
 ##humilde INTERPRETACAO DESSE RESULTADO: parece que tende a ter menos estudos com valores maiores de standard error, talvez aponte para um vies para estudos com menor erro. Parece que nao tem nenhum estudo so com resultados neutros, mesmo as observacoes neutras tem outras observacoes no mesmo estudo que sao ou positivas ou negativas, talvez isso aponte para um vies selecao de outcome reporting (estudos com resultados so com interacoes neutras tendem a nao ser publicados?)
@@ -1020,14 +1044,14 @@ funnel(data$effectsize , data$es_variance ,
 funnel(data$effectsize , data$es_variance , 
        yaxis = "seinv", 
        ylab = "Precision (1/SE)", 
-       xlab = "Effect size (SMD)", 
+       xlab = "Effect size", 
        col = cols)
 
 funnel(data$effectsize , data$es_variance , 
        ni = data$e_n,
        yaxis = "ni",
        ylab = "Effective sample size",
-       xlab = "Effect size (SMD)",
+       xlab = "Effect size",
        col = cols)
 ##parece o tamanho de amostragem nao é um problema tem estudos com pouca amostragem publicados com resultados neutros, parece que o ponto que eu levantei acima é mais relevante, parece que a maioria dos estudos tem pelo menos uma observacao negativas ou positivas
 
@@ -1042,11 +1066,6 @@ table(data[data$lifeform1_similarity == "0",c( "t_lifeform2","n_lifeform2")])
 table(data[data$lifeform2_similarity == "0", c("t_lifeform3", "n_lifeform3")])
 
 
-data$lifeform_n_t <- NA
-data[data$n_lifeform3 == "woody" & data$t_lifeform3 == "woody","lifeform_n_t" ] <- "w.w"
-data[data$n_lifeform3 == "woody" & data$t_lifeform3 == "herb","lifeform_n_t" ] <- "w.h"
-data[data$n_lifeform3 == "herb" & data$t_lifeform3 == "woody","lifeform_n_t" ] <- "h.w"
-data[data$n_lifeform3 == "herb" & data$t_lifeform3 == "herb","lifeform_n_t" ] <- "h.h"
 
 hist(data[data$lifeform_n_t == "w.h", "phylo_dist"])
 hist(data[data$lifeform_n_t == "h.w", "phylo_dist"])
