@@ -4,7 +4,7 @@ author: "Luisa Truffi"
 date: "2023-06-12"
 output: html_document
 ---
-Carregando e checando os dados:
+Load and check data:
 
 ```{r}
 setwd("~/Documents/mestrado/Meta analise/Analise/analises sem gimno git/Meta-phylo-coastal")
@@ -13,16 +13,15 @@ setwd("~/Documents/mestrado/Meta analise/Analise/analises sem gimno git/Meta-phy
 
 ```{r}
 
-##carregando os pacotes necessarios e carregando os dados
+
 library(metafor)
-#library(orchaRd)
 library(here)
 
 metadata <- read.csv("R/data/processed/tab.dist.filo.22.08.2023.csv")
             
 str(metadata)
 
-##selecionando somente as colunas relevantes para analise
+##select columns
 table(metadata$suitable_for_master_project)
 
 data <- metadata[metadata$suitable_for_master_project=="yes", c("study2022",              "outcome", "reference", "pub_year", "location1", "location2", "coordinate1","coordinate2" ,"dd_lat", "dd_long","gradient1", "gradient2", "gai", "n_sp_paper", "n_sp_LCVP", "n_family_LCVP","n_lifeform1","n_lifeform2", "n_lifeform3", "n_lifestage","t_sp_paper", "t_sp_LCVP", "t_family_LCVP", "t_lifeform1","t_lifeform2", "t_lifeform3", "t_lifestage3", "t_lifestage1","lifeform1_similarity", "lifeform2_similarity", "lifestage_n_t", "performance1","performance2", "interaction_type", "study_type","MEANc", "MEANn", "SDc", "SDn", "Nc", "Nn","SE_c", "SE_n", "sucess_c", "sucess_n", "fail_c", "fail_n", "data_type", "phylo_dist")]
@@ -43,14 +42,14 @@ data$outcome <- as.factor(data$outcome)
 data$dd_lat <- as.numeric(data$dd_lat)
 str(data)
 
-#padronizando dados para analise de combinacao de forma de vida
+#codes for life form combinations
 data[data$n_lifeform3 == "herb" & data$t_lifeform3 == "herb"  ,"lifeform_n_t"] <- "h.h"
 data[data$n_lifeform3 == "herb" & data$t_lifeform3 == "woody"  ,"lifeform_n_t"] <- "h.w"
 data[data$n_lifeform3 == "woody" & data$t_lifeform3 == "herb"  ,"lifeform_n_t"] <- "w.h"
 data[data$n_lifeform3 == "woody" & data$t_lifeform3 == "woody"  ,"lifeform_n_t"] <- "w.w"
 
 
-#padronizando os dados para analise da ontogenia
+#codes for ontogenetic stage combination
 table(data$lifestage_n_t)
 data[data$lifestage_n_t == "adult_adult", "lifestage_n_t"] <- "notseedling_notseedling"
 data[data$lifestage_n_t == "young_notseedling", "lifestage_n_t"] <- "notseedling_notseedling"
@@ -58,7 +57,7 @@ data[data$lifestage_n_t == "adult_seedling", "lifestage_n_t"] <- "notseedling_se
 
 table(data$lifestage_n_t)
 
-##adicionando a zona climatica
+##add climatic zone
 data$zoneclima <- rep(NA, nrow(data))
 data[which(data$dd_lat < 23.26 & data$dd_lat > -23.26 ), "zoneclima"] <- "Tropical"
 data[which(data$dd_lat > 35 | data$dd_lat < -35 ), "zoneclima"] <- "Temperate"
@@ -66,10 +65,11 @@ data[is.na(data$zoneclima), "zoneclima"] <- "Sub-tropical"
 data$zoneclima <- as.factor(data$zoneclima)
 table(data$zoneclima)
 
-##adicionando colunas para tamanho de efeito
+##create effect size and es variance columns
 data$effectsize <- rep(NA, nrow(data))
 data$es_variance <- rep(NA, nrow(data))
 
+#code for life forms
 data$lifeform_n_t <- NA
 data[data$n_lifeform3 == "woody" & data$t_lifeform3 == "woody","lifeform_n_t" ] <- "w.w"
 data[data$n_lifeform3 == "woody" & data$t_lifeform3 == "herb","lifeform_n_t" ] <- "w.h"
@@ -78,10 +78,10 @@ data[data$n_lifeform3 == "herb" & data$t_lifeform3 == "herb","lifeform_n_t" ] <-
 
 ```
 
-Calculo do tamanho de efeito:
+###Effect Size
 
 ```{r}
-#1-Abundancia (44, todos hedges d)
+#1-Abundance (44, all hedges d)
 
 table(data[data$performance2 == "abundance", "data_type"])
 
@@ -93,7 +93,7 @@ table(data[data$performance2 == "abundance", "data_type"])
 data[data$performance2 == "abundance", c("effectsize")] <-efeito.abund$yi
 data[data$performance2 == "abundance", c("es_variance")] <-efeito.abund$vi
 
-#2- Crescimento  analisar growth e growth_size juntos (53 em hedges)
+#2- growth and growth_size  (53 all hedges)
 
 table(data[data$performance2 == "growth", "data_type"])
 table(data[data$performance2 == "growth_size", "data_type"])
@@ -112,7 +112,7 @@ data[c(data$performance2 == "growth"
        | data$performance2 == "growth_size" 
       & data$data_type == "hedges_d"), c("es_variance")] <-efeito.cres$vi
 
-#3- Reproducao (13, todos hedges d)
+#3- Reprodution (13, all hedges d)
 table(data[data$performance2 == "reproduction", "data_type"])
 
 efeito.rep = escalc(
@@ -123,7 +123,7 @@ efeito.rep = escalc(
 data[data$performance2 =="reproduction", c("effectsize")] <-efeito.rep$yi
 data[data$performance2 == "reproduction", c("es_variance")] <-efeito.rep$vi
 
-#4- Sobrevivencia (28 hedges d, 20 odds)
+#4- Survival (28 hedges d, 20 odds)
 table(data[data$performance2 == "survival", "data_type"])
 
 efeito.sob = escalc(
@@ -143,7 +143,7 @@ data[data$performance2 == "survival"& data$data_type == "odds", c("effectsize")]
 data[data$performance2 == "survival"& data$data_type == "odds", c("es_variance")] <-odds.sob$vi
 
 
-#5- Ocorrência (3 odds)
+#5- Ocorrence(3 odds)
 table(data[data$performance2 == "occurrence", "data_type"])
 
 odds.ocorr <-  escalc(
@@ -154,7 +154,7 @@ data[data$performance2 =="occurrence", c("effectsize")] <-odds.ocorr$yi
 data[data$performance2 == "occurrence", c("es_variance")] <-odds.ocorr$vi
 
 
-#6- Germinacao (9 hedges d, 2 odds)
+#6- Emergence (9 hedges d, 2 odds)
 table(data[data$performance2 == "emergence", "data_type"])
 
 efeito.ger = escalc(
@@ -178,16 +178,16 @@ data[data$performance2 == "emergence"& data$data_type == "odds", c("es_variance"
 
 ```
 
-Modelos meta-analiticos:
+Models meta-analysis:
 
-1- a) modelogeral só com a identidade do estudo como fator randomico e sem nenhum fator fixo para ver a distribuição dos tamanhos de efeito e fazer uma análise exploratória.
+1- a) global effects model
 ```{r}
 model_geral <- rma.mv(yi = effectsize, V= es_variance, 
                      random =(~1|study2022/outcome), data = data)
 model_geral 
 ```
 
-Heterogeneidade (I2):
+Heterogeneity (I2):
 
 ```{r}
 v <- ((nrow(data) - 1)*(sum(1/data$es_variance)))/(((sum(1/data$es_variance))^2)-(sum((1/data$es_variance)^2)))
@@ -200,7 +200,7 @@ I2studygeral <- model_geral$sigma2[1] / (model_geral$sigma2[1] + model_geral$sig
 I2effectgeral <- model_geral$sigma2[2]/(model_geral$sigma2[1] + model_geral$sigma2[2] + v)
 ```
 
-Sensibilidade:
+Sensitivity:
 
 ```{r}
 rs.model_geral <- rstandard(model_geral)
@@ -220,17 +220,17 @@ abline (v=(2))
 ```
 
 
-Vies de publicacao:
+Publication bias:
 ```{r}
 egger.geral<- lm(residuals.rma(model_geral)~data$es_variance)
 summary(egger.geral)
 #no significant results, indicates no publication bias
 ```
-Gráfico que mostra a distribuição dos tamanhos de efeitos:
+Effect size distribution:
 
 ```{r}
 
-#caterpillars(model_geral, xlab = "Effect size (hedges g)" ,group = "study2022") 
+#aterpillars(model_geral, xlab = "Effect size (hedges g)" ,group = "study2022") 
 
 
 ```
@@ -248,14 +248,14 @@ addpoly(model_geral, mlab="", cex=1)
 ```
 
 
-2-a) Modelo distancia filogenetica (todas os indicadores de perfomance juntos)
+2-a) Model phylogenetic distance
 ```{r}
 
 model.phylo.nogimno <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), mods = ~phylo_dist,       data = data)
 model.phylo.nogimno
 ```
 
-Heterogeneidade (I2):
+Heterogeneity (I2):
 
 ```{r}
 
@@ -266,7 +266,7 @@ I2studyfilo <- model.phylo.nogimno$sigma2[1] / (model.phylo.nogimno$sigma2[1] + 
 I2effectfilo <- model.phylo.nogimno$sigma2[2]/(model.phylo.nogimno$sigma2[1] + model.phylo.nogimno$sigma2[2] + v)
 ```
 
-Sensibilidade:
+Sensitivity:
 
 ```{r}
 rs.model.phylo.nogimno <- rstandard(model.phylo.nogimno)
@@ -284,22 +284,21 @@ abline (h=3)
 abline (v=(2))
 #no extreme points
 ```
-Vies de publicacao:
+Publication bias:
 ```{r}
 egger.filo<- lm(residuals.rma(model.phylo.nogimno)~data$es_variance)
 summary(egger.filo)
 ```
 
 
-Gráfico todas as perfomances juntas:
+Graph phylogenetic distance effect model:
 
 ```{r}
 regplot(model.phylo.nogimno, xlab = "Phylogenetic distance", ylab = "Effect size (Hedges g)",  bty = "l")
 ```
-2-b)Modelo distância filogenética análise individual de cada indicador de perfomance
-Modelo cada tipo de performance:
+2-b)models of phylogenetic distance effect for each performance variable:
 
-Abundancia:
+Abundance:
 
 ```{r}
 model.filo.abun <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), 
@@ -307,7 +306,7 @@ model.filo.abun <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022
 model.filo.abun
 ```
 
-Heterogenidade I2 para abundancia:
+Heterogeneity I2 abundance:
 
 ```{r}
 v.ab <- ((nrow(data[ data$performance2 == "abundance",]) - 1)*(sum(1/data[ data$performance2 == "abundance", "es_variance"])))/(((sum(1/data[ data$performance2 == "abundance", "es_variance"]))^2)-(sum((1/data[ data$performance2 == "abundance", "es_variance"])^2)))
@@ -325,7 +324,7 @@ summary(egger.model.filo.abun)
 ```
 
 
-Crescimento:
+Growth:
 
 ```{r}
 model.filo.grow <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), 
@@ -333,7 +332,7 @@ mods = ~phylo_dist,data = data[ data$performance2 == "growth"|data$performance2 
 model.filo.grow
 ```
 
-Heterogenidade I2 crescimento:
+Heterogeneity I2 growth:
 
 ```{r}
 v.gr <- ((nrow(data[data$performance2 == "growth"|data$performance2 == "growth_size",]) -1)
@@ -352,7 +351,7 @@ egger.model.filo.grow<- lm(residuals.rma(model.filo.grow)~data[data$performance2
 summary(egger.model.filo.grow)
 ```
 
-Reproducao:
+Reprodution:
 
 ```{r}
 model.filo.rep <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), 
@@ -360,7 +359,7 @@ model.filo.rep <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/
 model.filo.rep
 ```
 
-Heterogenidade I2 reproducao:
+Heterogeneity I2 reprodution:
 
 ```{r}
 v.rep <- ((nrow(data[data$performance2 == "reproduction",]) -1)
@@ -379,14 +378,14 @@ egger.model.filo.rep<- lm(residuals.rma(model.filo.rep)~data[data$performance2 =
 summary(egger.model.filo.rep)
 ```
 
-Sobrevivencia
+Survival
 
 ```{r}
 model.filo.sur <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome),  mods = ~phylo_dist,data = data[ data$performance2 == "survival",])
 model.filo.sur
 ```
 
-Heterogenidade I2 sobrevivencia:
+Heterogeneity I2 survival:
 
 ```{r}
 v.sur <- ((nrow(data[data$performance2 == "survival",]) -1)
@@ -404,7 +403,7 @@ I2effect.filo.sur <- model.filo.sur$sigma2[2]/(model.filo.sur$sigma2[1] + model.
 egger.model.filo.sur<- lm(residuals.rma(model.filo.sur)~data[data$performance2 == "survival","es_variance"])
 summary(egger.model.filo.sur)
 ```
-Graficos modelos de cada variavel perfomance separadas:
+Graphs phylogenetic distance for each performance variable:
 
 ```{r}
 par(mfrow = c(2, 2))
@@ -511,13 +510,13 @@ lines(seq(0,650, length = 100),
       col = rgb(120,120,120, max = 255, alpha = 200)) } 
 ```
 
-Retirada do ponto influente de forma de vida
+Removal influential point of growth form
 ```{r}
 ##ponto com menor distancia filogenetica entre interações entre woody e herb
 data.lifeform <- data[ -which(data$outcome == "215_19"), ]
 
 ```
-3-b)Modelo distância filogenética * similaridade de forma de vida (definição 2: herb or woody)
+3-b)Model phylogenetic distance * growth form (herb or woody)
 
 ```{r}
 model.filo.for2 <-rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), 
@@ -526,7 +525,7 @@ model.filo.for2
 
 ```
 
-Heterogenidade:
+Heterogeneity:
 
 ```{r}
 I2totalfor.2 <- (model.filo.for2$sigma2[1] + model.filo.for2$sigma2[2]) / (model.filo.for2$sigma2[1] + model.filo.for2$sigma2[2] + v )
@@ -536,7 +535,7 @@ I2studyfor.2 <- model.filo.for2$sigma2[1] / (model.filo.for2$sigma2[1] + model.f
 I2effectfor.2 <-model.filo.for2$sigma2[2]/(model.filo.for2$sigma2[1] + model.filo.for2$sigma2[2] + v)
 
 ```
-Sensibilidade:
+Sensitivity:
 
 ```{r}
 rs.model.filo.for2 <- rstandard(model.filo.for2)
@@ -554,12 +553,12 @@ abline (h=3)
 abline (v=(2))
 #no extreme points
 ```
-Vies de publicacao:
+Publication bias:
 ```{r}
 egger.filo.for.2 <- lm(residuals.rma(model.filo.for2)~data.lifeform$es_variance)
 summary(egger.filo.for.2)
 ```
-Gráfico:
+Graph:
 
 ```{r}
 
@@ -624,14 +623,14 @@ lines(seq(0,650, length = 100),
       col =rgb(224, 201, 131, max = 255, alpha = 200))
 ```
 
-
+Model phylogenetic distance*lifeform
 ```{r}
 model_filo.lifeform_n_t <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), mods = ~0 +phylo_dist*lifeform_n_t,       data = data.lifeform[(data.lifeform$lifeform_n_t == "h.h" | data.lifeform$lifeform_n_t == "w.h" | data.lifeform$lifeform_n_t == "w.w"),])
 
 model_filo.lifeform_n_t 
 ```
 
-Heterogenidade:
+Heterogeneity:
 
 ```{r}
 v.lifeform_n_t <- ((nrow( data.lifeform[(data.lifeform$lifeform_n_t == "h.h" | data.lifeform$lifeform_n_t == "w.h" | data.lifeform$lifeform_n_t == "w.w"),  ]) -1)
@@ -647,7 +646,7 @@ I2effectmodel_filo.lifeform_n_t <- model_filo.lifeform_n_t$sigma2[2]/(model_filo
 
 ```
 
-Sensibilidade:
+Sensitivity:
 
 ```{r}
 rs.model_filo.lifeform_n_t <- rstandard(model_filo.lifeform_n_t)
@@ -666,13 +665,13 @@ abline (v=(2))
 #no extreme points
 ```
 
-Vies de publicacao:
+Publication bias:
 ```{r}
 egger.model_filo.lifeform_n_t <- lm(residuals.rma(model_filo.lifeform_n_t)~ data.lifeform[(data.lifeform$lifeform_n_t == "h.h" | data.lifeform$lifeform_n_t == "w.h" | data.lifeform$lifeform_n_t == "w.w"),"es_variance"])
 summary(egger.model_filo.lifeform_n_t)
 ```
 
-Grafico:
+Graph:
 ```{r}
 cor.lf_n_t <- (data.lifeform[(data.lifeform$lifeform_n_t == "h.h" | data.lifeform$lifeform_n_t == "w.h" | data.lifeform$lifeform_n_t == "w.w"),"lifeform_n_t"] )
 cor.lf_n_t <- replace(cor.lf_n_t, cor.lf_n_t == "h.h", "#71ac9c")
@@ -758,7 +757,7 @@ lines(seq(0,650, length = 100),
       col =rgb(0, 116, 0, max = 255, alpha = 200))
 ```
 
-4- Modelo distância filogenética * combinação estágio ontogenético
+4- Model phylogenetic distance * ontogenetic stage combination
 ```{r}
 model.filo.ontogenia.nogimno <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome),mods = ~ 0+ phylo_dist*lifestage_n_t,
  data = data[c(which(data$lifestage_n_t == "notseedling_notseedling"| 
@@ -766,7 +765,7 @@ model.filo.ontogenia.nogimno <- rma.mv(yi = effectsize, V= es_variance, random =
 model.filo.ontogenia.nogimno
 
 ``` 
-Heterogenidade:
+Heterogeneity:
 
 ```{r}
 v.ont <- ((nrow(data[c(which(data$lifestage_n_t == "notseedling_notseedling"| 
@@ -785,7 +784,7 @@ I2studyont <- model.filo.ontogenia.nogimno$sigma2[1] / (model.filo.ontogenia.nog
 I2effectont <- model.filo.ontogenia.nogimno$sigma2[2]/(model.filo.ontogenia.nogimno$sigma2[1] + model.filo.ontogenia.nogimno$sigma2[2] + v.ont)
 
 ```
-Sensibilidade:
+Sensitivity:
 
 ```{r}
 rs.model.filo.ontogenia.nogimno <- rstandard(model.filo.ontogenia.nogimno)
@@ -803,13 +802,13 @@ abline (h=3)
 abline (v=(2))
 #no extreme points
 ```
-Vies de publicacao:
+Publication bias:
 ```{r}
 egger.filo.ont <- lm(residuals.rma(model.filo.ontogenia.nogimno)~ data[ c(which(data$lifestage_n_t == "notseedling_notseedling"| 
                       data$lifestage_n_t == "notseedling_seedling")),"es_variance"])
 summary(egger.filo.ont)
 ```
-Gráfico:
+Graph:
 ```{r}
 cor.ontogenia <- (data[c(which(data$lifestage_n_t == "notseedling_notseedling"| 
                                  data$lifestage_n_t == "notseedling_seedling")), 
@@ -874,13 +873,13 @@ lines(seq(0,650, length = 100),
       lty = 3,
       col =rgb(224, 201, 131, max = 255, alpha = 200))
 ```
-5-a) Modelo distância filogenética * gradiente da duna
+5-a) Model phylogenetic distance * dune gradient
 ```{r}
 model_filo.duna <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), mods = ~0 +phylo_dist*gradient2,       data = data[data$gradient2 == "1"| data$gradient2 == "2",])
 model_filo.duna
 
 ```
-Heterogenidade:
+Heterogeneity:
 
 ```{r}
 v.duna <- ((nrow( data[data$gradient2 == "1"| data$gradient2 == "2",  ]) -1)
@@ -896,7 +895,7 @@ I2studyduna <- model_filo.duna$sigma2[1] / (model_filo.duna$sigma2[1] + model_fi
 I2effectduna <- model_filo.duna$sigma2[2]/(model_filo.duna$sigma2[1] + model_filo.duna$sigma2[2] + v.duna)
 
 ```
-Sensibilidade:
+Sensitivity:
 
 ```{r}
 rs.model_filo.duna <- rstandard(model_filo.duna)
@@ -914,12 +913,12 @@ abline (h=3)
 abline (v=(2))
 #no extreme points
 ```
-Vies de publicacao:
+Publication bias:
 ```{r}
 egger.filo.duna <- lm(residuals.rma(model_filo.duna)~ data[data$gradient2 == "1"| data$gradient2 == "2","es_variance"])
 summary(egger.filo.duna)
 ```
-Grafico:
+Graph:
 ```{r}
 cor.duna <- (data[c(which(data$gradient2 == "1"| data$gradient2 == "2")), 
                        "gradient2" ] == "1" )
@@ -982,7 +981,7 @@ lines(seq(0,650, length = 100),
       lty = 3,
       col =rgb(224, 201, 131, max = 255, alpha = 200))
 ```
-5-b)Modelo distância filogenética*GAI
+5-b)Model phylogenetic distance *GAI
 ```{r}
 model_filo.gai <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), mods = ~phylo_dist*gai,       data = data)
 model_filo.gai
@@ -990,7 +989,7 @@ model_filo.gai
 model_filo.gai2 <- rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), mods = ~ phylo_dist*gai + phylo_dist*I(gai^2),       data = data)
 model_filo.gai2
 ```
-Heterogenidade:
+Heterogeneity:
 
 ```{r}
 I2totalgai <- (model_filo.gai$sigma2[1] + model_filo.gai$sigma2[2]) / (model_filo.gai$sigma2[1] + model_filo.gai$sigma2[2] + v )
@@ -1000,7 +999,7 @@ I2studygai <- model_filo.gai$sigma2[1] / (model_filo.gai$sigma2[1] + model_filo.
 I2effectgai <- model_filo.gai$sigma2[2]/(model_filo.gai$sigma2[1] + model_filo.gai$sigma2[2] + v)
 
 ```
-Sensibilidade:
+Sensitivity:
 
 ```{r}
 rs.model_filo.gai <- rstandard(model_filo.gai)
@@ -1018,7 +1017,7 @@ abline (h=3)
 abline (v=(2))
 #no extreme points
 ```
-Vies de publicacao:
+Publication bias:
 ```{r}
 egger.filo.gai <- lm(residuals.rma(model_filo.gai)~ data$es_variance)
 summary(egger.filo.gai)
@@ -1048,9 +1047,6 @@ funnel(data$effectsize , data$es_variance ,
        xlab = "Effect size", 
        col = cols)
 
-##humilde INTERPRETACAO DESSE RESULTADO: parece que tende a ter menos estudos com valores maiores de standard error, talvez aponte para um vies para estudos com menor erro. Parece que nao tem nenhum estudo so com resultados neutros, mesmo as observacoes neutras tem outras observacoes no mesmo estudo que sao ou positivas ou negativas, talvez isso aponte para um vies selecao de outcome reporting (estudos com resultados so com interacoes neutras tendem a nao ser publicados?)
-##batendo o olho na planilha teve so um estudo que so reportou interacoes neutras Gagne_&_Houle_2001, nao um n super acima do normal (26 para uma obs e 50 para outra)
-##temos 70 observacoes reportadas como neutras,63 como positivas e 24 negativas
 
 funnel(data$effectsize , data$es_variance , 
        yaxis = "seinv", 
@@ -1064,11 +1060,14 @@ funnel(data$effectsize , data$es_variance ,
        ylab = "Effective sample size",
        xlab = "Effect size",
        col = cols)
-##parece o tamanho de amostragem nao é um problema tem estudos com pouca amostragem publicados com resultados neutros, parece que o ponto que eu levantei acima é mais relevante, parece que a maioria dos estudos tem pelo menos uma observacao negativas ou positivas
 
 ```
-Material suplementar analises com o ponto influente:
-Exploração dos dados da forma de vida, fazendo um modelo com as combinações de forma de vida:
+
+Suplementary material:
+
+phylogenetic distance*growth form 
+with influential point
+
 ```{r}
 table(data[data$lifeform1_similarity == "1",c( "t_lifeform2","n_lifeform2")])
 table(data[data$lifeform2_similarity == "1", c("t_lifeform3", "n_lifeform3")])
@@ -1089,7 +1088,7 @@ model_filo.lifeform_n_t <- rma.mv(yi = effectsize, V= es_variance, random =(~1|s
 model_filo.lifeform_n_t 
 
 ```
-Heterogenidade:
+Heterogeneity:
 
 ```{r}
 v.lifeform_n_t <- ((nrow( data[(data$lifeform_n_t == "h.h" | data$lifeform_n_t == "w.h" | data$lifeform_n_t == "w.w"),  ]) -1)
@@ -1105,7 +1104,7 @@ I2effectmodel_filo.lifeform_n_t <- model_filo.lifeform_n_t$sigma2[2]/(model_filo
 
 ```
 
-Sensibilidade:
+Sensitivity:
 
 ```{r}
 rs.model_filo.lifeform_n_t <- rstandard(model_filo.lifeform_n_t)
@@ -1124,7 +1123,7 @@ abline (v=(2))
 #no extreme points
 ```
 
-Vies de publicacao:
+Publication bias:
 ```{r}
 egger.model_filo.lifeform_n_t <- lm(residuals.rma(model_filo.lifeform_n_t)~ data[(data$lifeform_n_t == "h.h" | data$lifeform_n_t == "w.h" | data$lifeform_n_t == "w.w"),"es_variance"])
 summary(egger.model_filo.lifeform_n_t)
@@ -1216,217 +1215,25 @@ lines(seq(0,650, length = 100),
       col =rgb(0, 116, 0, max = 255, alpha = 200))
 ```
 
-
-3-a)Modelo distância filogenética * similaridade de forma de vida (definição 1: graminoid, forb, herb, sub-shrub, shrub and tree)
-
+#Review extra analysis
+normality test
 ```{r}
-model.filo.for1.nogimno <-rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), 
-       mods = ~ 0 + phylo_dist*lifeform1_similarity,       data = data)
-model.filo.for1.nogimno
+plot(density(data$effectsize))
 
-```
-Heterogenidade:
-
-```{r}
-I2totalfor1 <- (model.filo.for1.nogimno$sigma2[1] + model.filo.for1.nogimno$sigma2[2]) / (model.filo.for1.nogimno$sigma2[1] + model.filo.for1.nogimno$sigma2[2] + v )
-
-I2studyfor1 <- model.filo.for1.nogimno$sigma2[1] / (model.filo.for1.nogimno$sigma2[1] + model.filo.for1.nogimno$sigma2[2] + v)
-
-I2effectfor1 <-model.filo.for1.nogimno$sigma2[2]/(model.filo.for1.nogimno$sigma2[1] + model.filo.for1.nogimno$sigma2[2] + v)
-
-```
-Sensibilidade:
-
-```{r}
-rs.model.filo.for1.nogimno <- rstandard(model.filo.for1.nogimno)
-hat.model.filo.for1.nogimno <- hatvalues(model.filo.for1.nogimno) / mean(hatvalues(model.filo.for1.nogimno))
-
-plot(hat.model.filo.for1.nogimno, 
-     rs.model.filo.for1.nogimno$resid, 
-     xlab="Hat/average hat value", 
-     ylab= "Standard residuals", 
-     xlim=c(0,5), 
-     ylim=c(-5,5), 
-     cex.lab=1.2)
-abline (h=-3)
-abline (h=3)
-abline (v=(2))
-#no extreme points
-```
-Vies de publicacao:
-```{r}
-egger.filo.for1 <- lm(residuals.rma(model.filo.for1.nogimno)~data$es_variance)
-summary(egger.filo.for1)
+plot(density(data[c(which(data$lifestage_n_t == "notseedling_notseedling"| 
+                      data$lifestage_n_t == "notseedling_seedling")),  "effectsize"]))
 ```
 
-Gráfico:
-
+intraspecfic vs heterospecific
 ```{r}
-cor.forma <- (data$lifeform1_similarity == 1)
-cor.forma <- replace(cor.forma, cor.forma == "TRUE", "#71ac9c")
-cor.forma <- replace(cor.forma, cor.forma == "FALSE", "#ffc107")
-##mesma forma de vida em azul
-##forma de vida diferente em amarelo
+data$intra <- 0
 
-regplot( model.filo.for1.nogimno, 
-         mod = "phylo_dist",
-        xlab = "Phylogenetic distance",
-        ylab = "Effect size (Hedges g)",
-        xlim = c(0, 320), 
-        pred = FALSE, 
-        ci = FALSE, 
-        bg = cor.forma,
-        cex.lab = 1.25,
-        cex.axis = 1.25,
-        bty = "l")
+data[which(data$phylo_dist == 0), "intra"] <- 1
+data$intra <- as.factor(data$intra)
 
-A <- predict(model.filo.for1.nogimno,newmods = cbind(seq(0,300, length = 100), 0, 1, seq(0,300, length = 100)))
+model.intra.inter <-rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), 
+                         mods = ~ 0 + intra,       data = data)
 
-polygon(x = c(seq(0,650, length = 100), rev(seq(0,650, length = 100))),
-        y = c(A$ci.lb, rev(A$ci.ub)),
-        col = rgb(4, 115, 212, max = 255, alpha = 50),
-        border = "NA")
-lines(seq(0,650, length = 100),
-      A$pred,
-      lwd = 3,
-      col = rgb(113, 172, 224, max = 255))
-lines(seq(0,650, length = 100),
-      A$ci.lb,
-      lwd = 3,
-      lty = 3,
-      col = rgb(113, 172, 224, max = 255, alpha = 200))
-lines(seq(0,650, length = 100),
-      A$ci.ub,
-      lwd = 3,
-      lty = 3,
-      col = rgb(113, 172, 224, max = 255, alpha = 200))
-
-B <- predict(model.filo.for1.nogimno, newmods = cbind(seq(0,300, length = 100),1, 0,0 ))
-
-polygon(x = c(seq(0,650, length = 100), rev(seq(0,650, length = 100))),
-        y = c(B$ci.lb, rev(B$ci.ub)),
-        col = rgb(224, 201, 131, max = 255, alpha = 80),
-        border = "NA")
-lines(seq(0,650, length = 100),
-      B$pred,
-      lwd = 3,
-      col = rgb(255, 193, 7, max = 255))
-lines(seq(0,650, length = 100),
-      B$ci.lb,
-      lwd = 3,
-      lty = 3,
-      col = rgb(224, 201, 131, max = 255, alpha = 200))
-lines(seq(0,650, length = 100),
-      B$ci.ub,
-      lwd = 3,
-      lty = 3,
-      col =rgb(224, 201, 131, max = 255, alpha = 200))
-
-```
-3-b)Modelo distância filogenética * similaridade de forma de vida (definição 2: herb or woody)
-
-```{r}
-model.filo.for2.nogimno <-rma.mv(yi = effectsize, V= es_variance, random =(~1|study2022/outcome), 
-       mods = ~ 0 + phylo_dist*lifeform2_similarity,       data = data)
-model.filo.for2.nogimno
-
-```
-
-Heterogenidade:
-
-```{r}
-I2totalfor2 <- (model.filo.for2.nogimno$sigma2[1] + model.filo.for2.nogimno$sigma2[2]) / (model.filo.for2.nogimno$sigma2[1] + model.filo.for2.nogimno$sigma2[2] + v )
-
-I2studyfor2 <- model.filo.for2.nogimno$sigma2[1] / (model.filo.for2.nogimno$sigma2[1] + model.filo.for2.nogimno$sigma2[2] + v)
-
-I2effectfor2 <-model.filo.for2.nogimno$sigma2[2]/(model.filo.for2.nogimno$sigma2[1] + model.filo.for2.nogimno$sigma2[2] + v)
-
-```
-Sensibilidade:
-
-```{r}
-rs.model.filo.for2.nogimno <- rstandard(model.filo.for2.nogimno)
-hat.model.filo.for2.nogimno <- hatvalues(model.filo.for2.nogimno) / mean(hatvalues(model.filo.for2.nogimno))
-
-plot(hat.model.filo.for2.nogimno, 
-     rs.model.filo.for2.nogimno$resid, 
-     xlab="Hat/average hat value", 
-     ylab= "Standard residuals", 
-     xlim=c(0,5), 
-     ylim=c(-5,5), 
-     cex.lab=1.2)
-abline (h=-3)
-abline (h=3)
-abline (v=(2))
-#no extreme points
-```
-Vies de publicacao:
-```{r}
-egger.filo.for2 <- lm(residuals.rma(model.filo.for2.nogimno)~data$es_variance)
-summary(egger.filo.for2)
-```
-Gráfico:
-
-```{r}
-
-cor.forma2 <- (data$lifeform2_similarity == 1)
-cor.forma2 <- replace(cor.forma2, cor.forma2 == "TRUE", "#71ac9c")
-cor.forma2 <- replace(cor.forma2, cor.forma2 == "FALSE", "#ffc107")
-##mesma forma de vida em azul
-##forma de vida diferente em amarelo
-
-regplot( model.filo.for2.nogimno, 
-         mod = "phylo_dist",
-         xlab = "Phylogenetic distance",
-        ylab = "Effect size (Hedges g)",
-         xlim = c(0, 320), 
-         pred = FALSE, 
-         ci = FALSE, 
-         bg = cor.forma2,
-         cex.lab = 1.25,
-         cex.axis = 1.25,
-        bty = "l")
-
-A2 <- predict(model.filo.for2.nogimno, newmods = cbind(seq(0,300, length = 100),0, 1, seq(0,300, length = 100)))
-
-polygon(x = c(seq(0,650, length = 100), rev(seq(0,650, length = 100))),
-        y = c(A2$ci.lb, rev(A2$ci.ub)),
-        col = rgb(4, 115, 212, max = 255, alpha = 50),
-        border = "NA")
-lines(seq(0,650, length = 100),
-      A2$pred,
-      lwd = 3,
-      col = rgb(113, 172, 224, max = 255))
-lines(seq(0,650, length = 100),
-      A2$ci.lb,
-      lwd = 3,
-      lty = 3,
-      col = rgb(113, 172, 224, max = 255, alpha = 200))
-lines(seq(0,650, length = 100),
-      A2$ci.ub,
-      lwd = 3,
-      lty = 3,
-      col = rgb(113, 172, 224, max = 255, alpha = 200))
-
-B2 <- predict(model.filo.for2.nogimno, newmods = cbind(seq(0,300, length = 100),1, 0, 0))
-
-polygon(x = c(seq(0,650, length = 100), rev(seq(0,650, length = 100))),
-        y = c(B2$ci.lb, rev(B2$ci.ub)),
-        col = rgb(224, 201, 131, max = 255, alpha = 80),
-        border = "NA")
-lines(seq(0,650, length = 100),
-      B2$pred,
-      lwd = 3,
-      col = rgb(255, 193, 7, max = 255))
-lines(seq(0,650, length = 100),
-      B2$ci.lb,
-      lwd = 3,
-      lty = 3,
-      col = rgb(224, 201, 131, max = 255, alpha = 200))
-lines(seq(0,650, length = 100),
-      B2$ci.ub,
-      lwd = 3,
-      lty = 3,
-      col =rgb(224, 201, 131, max = 255, alpha = 200))
+boxplot(formula = data$effectsize ~ data$intra)
 ```
 
